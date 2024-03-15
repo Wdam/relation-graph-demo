@@ -10,7 +10,7 @@
                  {{i.nodeName}}
                </div>
             </div>
-            <span class="operation" :style="[{color:(node.data.direction==='IN'?'rgb(255, 96, 96)':'rgb(18, 139, 237)')}]">{{node.data.operation}}</span>
+<!--            <span class="operation" :style="[{color:(node.data.direction==='IN'?'rgb(255, 96, 96)':'rgb(18, 139, 237)')}]">{{node.data.operation}}</span>-->
           </div>
         </template>
       </RelationGraph>
@@ -22,7 +22,7 @@ import RelationGraph from 'relation-graph'
 import data from "@/assets/data";
 export default {
   name: "relation-graph",
-  components: { RelationGraph },
+  components: {RelationGraph },
   data() {
     return {
       chrildNode:[],
@@ -51,7 +51,7 @@ export default {
         defaultNodeColor: '#ffffff',
         // defaultNodeWidth: 200,
         // defaultNodeHeight: 50,
-        defaultJunctionPoint: 'tb'
+        defaultJunctionPoint: 'tb',
       },
     }
   },
@@ -124,36 +124,25 @@ export default {
       }
     },
     transformLines(nodeData){
-      // data.forEach((item,index) => {
-      //
-      //     if (item.parent === null) {
-      //       if (item.id !== this.originalData['id'].toString()) {
-      //         this.lines.push({
-      //           from: (item.id).toString(),
-      //           to: (this.originalData['id']).toString(),
-      //           // text: item.text,
-      //           lineShape: 4
-      //         });
-      //       }
-      //     } else {
-      //       this.lines.push({
-      //         from: (item.id).toString(),
-      //         to: (item.parent).toString(),
-      //         // text: item.text,
-      //         lineShape: 4
-      //       });
-      //     }
-      // });
-      nodeData.forEach(item => {
+      nodeData.forEach((item,index) => {
         const line = {
           from: item.id,
           to: '',
-          // text: item.operation,
+          text: item.data.operation,
           lineShape: 4
         };
 
         if (item.parent === null) {
-          line.to = this.originalData['id'].toString();
+          // 如果父节点为 null，则根据节点的 index 奇偶性设置 from 和 to
+          if (index % 2 === 0) {
+            line.from = this.originalData['id'].toString(); // root 节点
+            line.to = item.id;
+            line.showStartArrow=true
+            line.showEndArrow = false
+          } else {
+            line.from = item.id;
+            line.to = this.originalData['id'].toString(); // root 节点
+          }
         } else {
           const parentItem = nodeData.find(parent => parent.id === item.parent);
           if (parentItem) {
@@ -188,13 +177,80 @@ export default {
 
     onNodeClick(nodeObject, $event) {
       console.log('onNodeClick:', nodeObject)
+      console.log('onNodeClick:', nodeObject);
+      const allLinks = this.$refs.graphRef.getLinks();
+      allLinks.forEach(link => { // 还原所有样式
+        link.relations.forEach(line => {
+          line.color = "#c0c0c0";
+          line.lineWidth = 3;
+          line.animation = 0
+        });
+      });
+
+      let fromNodeList = []
+      let toNodeList = []
+      this.getFromNode(allLinks,nodeObject,fromNodeList)
+      this.getToNode(allLinks,nodeObject,toNodeList)
+      // fromNodeList.forEach(item=>{
+      //   console.log(item.fromNode.id + "->"+item.toNode.id)
+      // })
+      // toNodeList.forEach(item=>{
+      //   console.log(item.fromNode.id + "->"+item.toNode.id)
+      // })
+
+      toNodeList.forEach(item=>{
+        allLinks.filter(link => (link.fromNode === item.fromNode && link.toNode === item.toNode)).forEach(link => {
+          console.log(link,'22222')
+          link.relations.forEach(line => {
+            line.color = "#ffa00b"
+            line.lineWidth = 5;
+            line.animation = 2
+          });
+        });
+      })
+      fromNodeList.forEach(item=>{
+        allLinks.filter(link => (link.fromNode === item.fromNode && link.toNode === item.toNode)).forEach(link => {
+          link.relations.forEach(line => {
+            line.color = "#ffa00b"
+            line.lineWidth = 5;
+            line.animation = 2
+          });
+        });
+      })
+
+
+      // 让与{nodeObject}相关的所有连线高亮
+      // allLinks.filter(link => (link.fromNode === nodeObject || link.toNode === nodeObject)).forEach(link => {
+      //   console.log(link.fromNode)
+      //   link.relations.forEach(line => {
+      //     console.log('line:', line);
+      //     line.data.orignColor = line.color;
+      //     line.data.orignFontColor = line.fontColor || line.color;
+      //     line.data.orignLineWidth = line.lineWidth || 1;
+      //     line.lineWidth = 3;
+      //   });
+      // });
+      // // 有时候更改一些属性后，并不能马上同步到视图，这需要以下方法让视图强制根据数据同步到最新
+      this.$refs.graphRef.getInstance().dataUpdated();
     },
     onLineClick(lineObject, $event) {
       console.log('onLineClick:', lineObject)
     },
-    handelMouseenter(nodeObject){
+    handelMouseenter(nodeObject,$event){
 
-      console.log('onNodeClick:', nodeObject)
+    },
+    getFromNode(allLinks, node, fromNodeList) {
+      let linkList = allLinks.filter(link => (link.toNode === node));
+      linkList.forEach(link => {
+        fromNodeList.push({fromNode: link.fromNode, toNode: node});
+      });
+    },
+
+    getToNode(allLinks, node, toNodeList) {
+      let linkList = allLinks.filter(link => (link.fromNode === node));
+      linkList.forEach(link => {
+        toNodeList.push({fromNode: node, toNode: link.toNode});
+      });
     },
     handelMouseleave(){
 
