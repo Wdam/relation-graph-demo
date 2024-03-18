@@ -72,7 +72,7 @@ export default {
       listData:[],
       chrildNode:[],
       lines:[],
-      rootNode:{id: data['id'].toString(), text: data['nodeName'],index:0 },
+      rootNode:{id: data['id'].toString(), text: data['nodeName'],index:0,},
       originalData:data,
       currentCase: '纵向树状图谱',
       isShowCodePanel: false,
@@ -84,8 +84,8 @@ export default {
             from: 'top',
             min_per_width: 500,
             max_per_width: 1200,
-            min_per_height: 600,
-            max_per_height: 1200
+            min_per_height: 400,
+            max_per_height: 800,
 
           }
         ],
@@ -285,7 +285,6 @@ export default {
     },
     handelMouseenter(nodeObject,$event){
       const allLinks = this.$refs.graphRef.getLinks();
-      this.onNodeClick(nodeObject,$event)
       let fromNodeList = []
       let toNodeList = []
       this.getFromNode(allLinks,nodeObject,fromNodeList)
