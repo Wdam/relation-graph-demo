@@ -178,7 +178,8 @@ export default {
           from: item.id,
           to: '',
           text: item.data.operation,
-          lineShape: 4
+          lineShape: 4,
+          useTextPath: true
         };
 
         if (item.parent === null) {
@@ -276,20 +277,6 @@ export default {
           });
         });
       })
-
-
-      // 让与{nodeObject}相关的所有连线高亮
-      // allLinks.filter(link => (link.fromNode === nodeObject || link.toNode === nodeObject)).forEach(link => {
-      //   console.log(link.fromNode)
-      //   link.relations.forEach(line => {
-      //     console.log('line:', line);
-      //     line.data.orignColor = line.color;
-      //     line.data.orignFontColor = line.fontColor || line.color;
-      //     line.data.orignLineWidth = line.lineWidth || 1;
-      //     line.lineWidth = 3;
-      //   });
-      // });
-      // // 有时候更改一些属性后，并不能马上同步到视图，这需要以下方法让视图强制根据数据同步到最新
       this.$refs.graphRef.getInstance().dataUpdated();
     },
     onLineClick(lineObject, $event) {
@@ -297,7 +284,39 @@ export default {
       lineObject['className'] = ''
     },
     handelMouseenter(nodeObject,$event){
+      const allLinks = this.$refs.graphRef.getLinks();
       this.onNodeClick(nodeObject,$event)
+      let fromNodeList = []
+      let toNodeList = []
+      this.getFromNode(allLinks,nodeObject,fromNodeList)
+      this.getToNode(allLinks,nodeObject,toNodeList)
+      // fromNodeList.forEach(item=>{
+      //   console.log(item.fromNode.id + "->"+item.toNode.id)
+      // })
+      // toNodeList.forEach(item=>{
+      //   console.log(item.fromNode.id + "->"+item.toNode.id)
+      // })
+
+      toNodeList.forEach(item=>{
+        allLinks.filter(link => (link.fromNode === item.fromNode && link.toNode === item.toNode)).forEach(link => {
+          console.log(link,'22222')
+          link.relations.forEach(line => {
+            line.color = "#148ccd"
+            line.lineWidth = 3;
+            line.className = 'all_height_light'
+          });
+        });
+      })
+      fromNodeList.forEach(item=>{
+        allLinks.filter(link => (link.fromNode === item.fromNode && link.toNode === item.toNode)).forEach(link => {
+          link.relations.forEach(line => {
+            line.color = "#148ccd"
+            line.lineWidth = 3;
+            line.className = 'all_height_light'
+          });
+        });
+      })
+      this.$refs.graphRef.getInstance().dataUpdated();
       //console.log(nodeObject,$event,'111111')
     },
     handelMouseleave(){
